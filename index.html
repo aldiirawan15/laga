@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>LAGA VOLL 3</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      display: grid;
+      gap: 2rem;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+      margin-top: 0;
+      color: #555;
+    }
+    .player-inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .player-inputs input {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    .rules-image {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 1rem auto;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #e0e0e0;
+      text-align: center;
+    }
+    th {
+      background-color: #FFC107;
+      color: #333;
+      font-weight: bold;
+    }
+    .highlight {
+      background-color: #fff8e1;
+      border-left: 4px solid #FFC107;
+    }
+    select, .agg-input, .kd-input, .note-input {
+      padding: 0.25rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 1rem;
+      text-align: center;
+    }
+    .agg-input {
+      width: 80px;
+    }
+    .kd-input {
+      width: 60px;
+    }
+    .note-input {
+      width: 70px;
+      font-size: 0.8rem;
+      padding: 2px 4px;
+    }
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card" id="setup-card">
+    <h1>G0BL0KER$ LEAGUE TEKKEN-8 VOLL 3!</h1>
+    <h2>Bace dulu baru main</h2>
+    <img class="rules-image" src="" alt="Aturan Turnamen Round Robin">
+    <h2>Ketik adan peserta e jhon, yen sg milu titik gen jin </h2>
+    <div class="player-inputs" id="player-inputs"></div>
+    <button id="add-player-btn" style="margin-top: 1rem; background: #2196F3;">+ Tambah Pemain</button>
+    <button id="start-btn">Mulai Turnamen</button>
+  </div>
+
+  <div class="card" id="schedule-card" style="display:none;">
+    <h2>Hasil Pertandingan</h2>
+    <table id="schedule-table">
+      <thead>
+        <tr>
+          <th>Leg</th>
+          <th>Match</th>
+          <th>AGG</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card" id="standings-card" style="display:none;">
+    <h2>Klasemen Sementara</h2>
+    <table id="standings-table">
+      <thead>
+        <tr>
+          <th>Pemain</th>
+          <th>Main</th>
+          <th>Menang</th>
+          <th>Kalah</th>
+          <th>Seri</th>
+          <th>Poin</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const MAX_PLAYERS = 12;
+const MIN_PLAYERS = 2;
+
+const playerInputsDiv = document.getElementById('player-inputs');
+const addPlayerBtn = document.getElementById('add-player-btn');
+const startBtn = document.getElementById('start-btn');
+const scheduleCard = document.getElementById('schedule-card');
+const standingsCard = document.getElementById('standings-card');
+const scheduleTableBody = document.querySelector('#schedule-table tbody');
+const standingsTableBody = document.querySelector('#standings-table tbody');
+
+function createPlayerInput(index, value = '') {
+  const wrapper = document.createElement('div');
+  wrapper.style.display = 'flex';
+  wrapper.style.alignItems = 'center';
+  wrapper.style.gap = '4px';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = `Pemain ${index}`;
+  input.value = value || `Pemain ${index}`;
+  input.style.flex = '1';
+
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.textContent = '🗑️';
+  removeBtn.title = 'Hapus pemain';
+  removeBtn.style.background = '#e53935';
+  removeBtn.style.color = 'white';
+  removeBtn.style.border = 'none';
+  removeBtn.style.padding = '4px 8px';
+  removeBtn.style.borderRadius = '4px';
+  removeBtn.style.cursor = 'pointer';
+
+  removeBtn.addEventListener('click', () => {
+    if (playerInputsDiv.children.length > MIN_PLAYERS) {
+      wrapper.remove();
+    } else {
+      alert("Minimal 2 pemain diperlukan!");
+    }
+  });
+
+  wrapper.appendChild(input);
+  wrapper.appendChild(removeBtn);
+  return wrapper;
+}
+
+function loadInitialPlayers() {
+  playerInputsDiv.innerHTML = '';
+  for (let i = 1; i <= 6; i++) {
+    playerInputsDiv.appendChild(createPlayerInput(i));
+  }
+}
+
+addPlayerBtn.addEventListener('click', () => {
+  const count = playerInputsDiv.children.length;
+  if (count >= MAX_PLAYERS) return alert("Maksimal 12 pemain ya cuy!");
+  playerInputsDiv.appendChild(createPlayerInput(count + 1));
+});
+
+function generateRoundRobin(players) {
+  const n = players.length;
+  const rounds = n - 1;
+  const half = n / 2;
+  let arr = [...players];
+  const schedule = [];
+  for (let r = 0; r < rounds; r++) {
+    const pairs = [];
+    for (let i = 0; i < half; i++) {
+      pairs.push([arr[i], arr[n - 1 - i]]);
+    }
+    schedule.push(pairs);
+    const rest = arr.slice(1);
+    rest.unshift(rest.pop());
+    arr = [arr[0], ...rest];
+  }
+  return schedule;
+}
+
+function renderSchedule(players) {
+  scheduleTableBody.innerHTML = '';
+  for (let leg = 1; leg <= 2; leg++) {
+    const legRow = document.createElement('tr');
+    legRow.innerHTML = `<td colspan="3" style="background: linear-gradient(to right, #ffd54f, #ffb300); font-weight: bold; text-align: center; font-size: 1.3rem; padding: 0.75rem 0; border-top: 2px solid #ff9800; border-bottom: 2px solid #ff9800; color: #333;">Leg ${leg}</td>`;
+    scheduleTableBody.appendChild(legRow);
+
+    const shuffled = [...players].sort(() => Math.random() - 0.5);
+    const schedule = generateRoundRobin(shuffled);
+    schedule.forEach(pairs => {
+      pairs.forEach(pair => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>Leg ${leg}</td>
+          <td>
+            ${pair[0]} (<input type="text" class="note-input" data-player="${pair[0]}" placeholder="">)
+            vs 
+            ${pair[1]} (<input type="text" class="note-input" data-player="${pair[1]}" placeholder="">)
+          </td>
+          <td><input type="text" class="agg-input" placeholder="0-0"></td>
+        `;
+        scheduleTableBody.appendChild(row);
+      });
+    });
+  }
+  addInputListeners(players);
+}
+
+function addInputListeners(players) {
+  document.querySelector('#schedule-table tbody').addEventListener('input', e => {
+    if (!e.target.matches('.agg-input')) return;
+    const val = e.target.value.trim();
+    const parts = val.split('-').map(x => parseInt(x));
+    if (/^\d+-\d+$/.test(val)) {
+      updateStandings(players);
+    }
+  });
+}
+
+function updateStandings(players) {
+  const stats = {};
+  players.forEach(p => stats[p] = { played: 0, win: 0, lose: 0, Seri: 0, points: 0 });
+  const pairingResults = {};
+
+  document.querySelectorAll('#schedule-table tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length < 3) return;
+    const txt = cells[1].textContent;
+    const [left, right] = txt.split(' vs ');
+    const p1 = left.split('(')[0].trim();
+    const p2 = right.split('(')[0].trim();
+    const aggVal = cells[2].querySelector('.agg-input').value.trim();
+    const parts = aggVal.split('-').map(x => parseInt(x));
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      const [s1, s2] = parts;
+      stats[p1].played++;
+      stats[p2].played++;
+
+      const key = [p1, p2].sort().join('|');
+      if (!pairingResults[key]) pairingResults[key] = [];
+      if (s1 > s2) {
+        pairingResults[key].push(p1);
+        stats[p1].win++;
+        stats[p2].lose++;
+      } else if (s2 > s1) {
+        pairingResults[key].push(p2);
+        stats[p2].win++;
+        stats[p1].lose++;
+      } else {
+        pairingResults[key].push('Seri');
+      }
+    }
+  });
+
+  Object.entries(pairingResults).forEach(([key, results]) => {
+    const [a, b] = key.split('|');
+    const winsA = results.filter(r => r === a).length;
+    const winsB = results.filter(r => r === b).length;
+    const played = results.length;
+
+    if (played === 1) {
+      if (winsA === 1) stats[a].points += 3;
+      if (winsB === 1) stats[b].points += 3;
+    } else if (played === 2) {
+      if (winsA === 2) {
+        stats[a].points += 6;
+      } else if (winsB === 2) {
+        stats[b].points += 6;
+      } else if (winsA === 1 && winsB === 1) {
+        stats[a].points += 1;
+        stats[b].points += 1;
+        stats[a].Seri++;
+        stats[b].Seri++;
+      }
+    }
+  });
+
+  const sortedPlayers = [...players].sort((x, y) => stats[y].points - stats[x].points);
+
+  standingsTableBody.innerHTML = '';
+  sortedPlayers.forEach((p, idx) => {
+    const s = stats[p];
+    const tr = document.createElement('tr');
+    if (idx === 0) {
+      tr.classList.add('highlight');
+      tr.innerHTML = `
+        <td>🏆 ${p}</td>
+        <td>${s.played}</td>
+        <td>${s.win}</td>
+        <td>${s.lose}</td>
+        <td>${s.Seri}</td>
+        <td>${s.points}</td>
+      `;
+    } else {
+      tr.innerHTML = `
+        <td>${p}</td>
+        <td>${s.played}</td>
+        <td>${s.win}</td>
+        <td>${s.lose}</td>
+        <td>${s.Seri}</td>
+        <td>${s.points}</td>
+      `;
+    }
+    standingsTableBody.appendChild(tr);
+  });
+}
+
+startBtn.addEventListener('click', () => {
+  const nameInputs = document.querySelectorAll('#player-inputs input');
+  const players = Array.from(nameInputs).map(i => i.value.trim()).filter(Boolean);
+  if (players.length < MIN_PLAYERS) return alert("Minimal 2 pemain untuk mulai turnamen.");
+  renderSchedule(players);
+  scheduleCard.style.display = 'block';
+  standingsCard.style.display = 'block';
+  startBtn.disabled = true;
+});
+
+loadInitialPlayers();
+</script>
+</body>
+</html>
